@@ -1,4 +1,7 @@
-import csv, sys, urllib.parse, re
+import csv, sys, os, urllib.parse, re
+# Sender details come from env so they are not committed: SENDER_NAME, SENDER_WHATSAPP
+NAME=os.environ.get('SENDER_NAME','[NAME]'); WA=os.environ.get('SENDER_WHATSAPP','[NUMBER]')
+NAME_RU=os.environ.get('SENDER_NAME_RU',NAME)
 r=list(csv.DictReader(open(sys.argv[1])))
 KIND_EN={'hotel':'hotels','guest_house':'guest houses','hostel':'hostels','apartment':'apartments','motel':'hotels',
  'restaurant':'restaurants','cafe':'cafes','bar':'bars','pub':'bars','fast_food':'cafes','bakery':'bakeries',
@@ -13,8 +16,10 @@ def feat(t,ru=False):
 def hook(x,ru):
     p=x['problem']; w=x['website'].split(';')[0]
     if p.startswith('Сайт не открывается'):
-        return (f"Сегодня пытался открыть ваш сайт {w} — он не загружается. Гости, которые находят вас в Google, попадают в тупик и бронируют у конкурентов."
-                if ru else f"I tried to open your website {w} today and it doesn't load. Guests who find you on Google hit a dead end and book somewhere else.")
+        who_en='Patients' if x['type'] in ('dentist','clinic') else 'Guests'
+        who_ru='Пациенты' if x['type'] in ('dentist','clinic') else 'Гости'
+        return (f"Сайт, который указан у вас в интернете, {w}, не открывается, я проверил сегодня. {who_ru}, которые находят вас в Google, попадают в тупик и уходят к конкурентам."
+                if ru else f"The website listed for you online, {w}, doesn't open. I checked it today. {who_en} who find you on Google hit a dead end and go somewhere else.")
     if 'Booking' in p:
         return ("Вижу, что у вас нет своего сайта — только Booking/Airbnb. С каждой брони вы отдаёте им около 15%. Свой сайт с прямым бронированием возвращает часть гостей без комиссии."
                 if ru else "I noticed you don't have your own website, only Booking/Airbnb listings. You pay them roughly 15% on every booking; a site with direct booking brings part of those guests back commission-free.")
@@ -32,12 +37,12 @@ for x in r:
     k=KIND_EN.get(x['type'],'local businesses'); n=x['name']
     if ru:
         subj=f"{n} — бесплатный демо-сайт для вас"
-        body=(f"Здравствуйте, команда {n}!\n\n{hook(x,True)}\n\nЯ делаю быстрые сайты для {KIND_RU.get(k,'бизнеса')} в Грузии: на грузинском, английском и русском, удобные с телефона, с {feat(x['type'],True)}, плюс настройка карточки в Google Картах.\n\n"
-              f"Могу бесплатно сделать демо-версию сайта именно для {n} — посмотрите, и если не понравится, ничего не должны. Просто ответьте «да».\n\nС уважением,\n[ИМЯ]\nWhatsApp: [НОМЕР]\n\nP.S. Если неактуально — ответьте, и я больше не напишу.")
+        body=(f"Здравствуйте, команда {n}!\n\n{hook(x,True)}\n\nЯ делаю быстрые сайты для {KIND_RU.get(k,'бизнеса')} в Грузии: на грузинском, английском и русском, удобные с телефона, с {feat(x['type'],True)}, плюс настройка карточки в Google Картах. Цены от 200 лари, в зависимости от задачи.\n\n"
+              f"Могу бесплатно сделать демо-версию сайта именно для {n} — посмотрите, и если не понравится, ничего не должны. Просто ответьте «да».\n\nС уважением,\n{NAME_RU}\nWhatsApp: {WA}\n\nP.S. Если неактуально — ответьте, и я больше не напишу.")
     else:
         subj=f"Free website demo for {n}"
-        body=(f"Hello {n} team,\n\n{hook(x,False)}\n\nI build fast websites for {k} in Georgia: in Georgian, English and Russian, mobile-friendly, with {feat(x['type'])}, plus Google Maps profile setup.\n\n"
-              f"I'd be happy to make a free demo of a new site for {n}, no strings attached. If you like it, we talk; if not, you owe nothing. Just reply \"yes\".\n\nBest regards,\n[NAME]\nWhatsApp: [NUMBER]\n\nP.S. If this isn't relevant, just reply and I won't write again.")
+        body=(f"Hello {n} team,\n\n{hook(x,False)}\n\nI build fast websites for {k} in Georgia: in Georgian, English and Russian, mobile-friendly, with {feat(x['type'])}, plus Google Maps profile setup. Prices start from 200 GEL, depending on what you need.\n\n"
+              f"I'd be happy to make a free demo of a new site for {n}, no strings attached. If you like it, we talk; if not, you owe nothing. Just reply \"yes\".\n\nBest regards,\n{NAME}\nWhatsApp: {WA}\n\nP.S. If this isn't relevant, just reply and I won't write again.")
     wa=''
     if x['whatsapp']:
         msg=(f"Здравствуйте! Пишу по поводу {n}. " if ru else f"Hello! I'm writing about {n}. ")+hook(x,ru)+(" Могу бесплатно сделать демо нового сайта для вас — интересно?" if ru else " I can make you a free demo of a new website — interested?")

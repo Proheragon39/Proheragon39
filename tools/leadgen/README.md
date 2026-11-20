@@ -10,3 +10,7 @@ Lead data itself is NOT committed (third-party contact data); it lives in Google
 5. Remove chains -> `leads/pois_final.json` (see chain regex used in session), then
    `python3 segment.py leads/pois_final.json leads/leads_all.csv`
 6. `python3 drafts.py leads/leads_all.csv leads/leads_georgia.csv` (email drafts + WhatsApp links)
+
+Before each outreach wave: `python3 dnscheck.py urls.txt` re-checks that sites are still dead.
+Run drafts with `SENDER_NAME=... SENDER_NAME_RU=... SENDER_WHATSAPP=... python3 drafts.py ...` (not committed).
+The whole workflow ("План А") is in [PLAN_A.md](PLAN_A.md).
